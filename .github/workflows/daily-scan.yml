@@ -1,0 +1,32 @@
+name: Daily AI Repo Scanner
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天 UTC 02:00 (台灣 10:00 AM)
+  workflow_dispatch:       # 手動觸發
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  scan-and-fork:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run scan
+        env:
+          GH_TOKEN: ${{ secrets.FORK_BOT_TOKEN }}
+        run: |
+          chmod +x scan-and-fork.sh
+          bash scan-and-fork.sh
+
+      - name: Commit log
+        run: |
+          git config user.name "AI Fork Bot"
+          git config user.email "bot@DforDennies.github.io"
+          git add fork-log.md
+          git diff --cached --quiet || git commit -m "📊 Daily scan $(date -u +%Y-%m-%d)"
+          git push
